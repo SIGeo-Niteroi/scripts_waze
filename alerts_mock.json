@@ -1,0 +1,23 @@
+{
+    "alerts": [
+        {
+            "country": "BR",
+            "city": "Niterói",
+            "reportRating": 4,
+            "reportByMunicipalityUser": "false",
+            "confidence": 0,
+            "reliability": 5,
+            "type": "HAZARD",
+            "uuid": "1f355953-a5dc-4fab-a744-fdf319c5d2c4",
+            "roadType": 2,
+            "magvar": 238,
+            "subtype": "HAZARD_ON_ROAD_CONSTRUCTION",
+            "street": "Av. Visconde do Rio Branco",
+            "location": {
+                "x": -43.125116,
+                "y": -22.895557
+            },
+            "pubMillis": 1743079109000
+        }
+    ]
+}

@@ -1,0 +1,86 @@
+[
+    {
+        "country": "BR",
+        "level": 2,
+        "city": "Niterói",
+        "line": [
+            {
+                "x": -43.115051,
+                "y": -22.902706
+            },
+            {
+                "x": -43.114087,
+                "y": -22.903647
+            },
+            {
+                "x": -43.113184,
+                "y": -22.904502
+            },
+            {
+                "x": -43.112265,
+                "y": -22.905341
+            },
+            {
+                "x": -43.111356,
+                "y": -22.906243
+            },
+            {
+                "x": -43.110467,
+                "y": -22.90712
+            },
+            {
+                "x": -43.109699,
+                "y": -22.907853
+            }
+        ],
+        "speedKMH": 8.3,
+        "length": 791,
+        "turnType": "NONE",
+        "uuid": 1259835796,
+        "endNode": "R. Mariz e Barros",
+        "speed": 2.30555555555556,
+        "segments": [
+            {
+                "fromNode": 158829635,
+                "ID": 155167672,
+                "toNode": 158829720,
+                "isForward": true
+            },
+            {
+                "fromNode": 158829720,
+                "ID": 155167788,
+                "toNode": 175068343,
+                "isForward": true
+            },
+            {
+                "fromNode": 175068343,
+                "ID": 155167889,
+                "toNode": 229190026,
+                "isForward": true
+            },
+            {
+                "fromNode": 229190026,
+                "ID": 398512290,
+                "toNode": 175068348,
+                "isForward": false
+            },
+            {
+                "fromNode": 175068348,
+                "ID": 393290621,
+                "toNode": 175068393,
+                "isForward": true
+            },
+            {
+                "fromNode": 175068393,
+                "ID": 393290630,
+                "toNode": 175068440,
+                "isForward": true
+            }
+        ],
+        "roadType": 1,
+        "delay": 206,
+        "street": "R. Ator Paulo Gustavo",
+        "id": 1259835796,
+        "pubMillis": 1742922076250
+    }
+]

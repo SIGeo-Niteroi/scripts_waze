@@ -1,10 +1,12 @@
 from utils.agol_layer_methods import add_features_agol, remove_from_agol, update_features_agol
-from utils.parse_dataframe import create_ms_timestamp, parse_hist_data
+from tasks.parse_to_dataframe import parse_hist_data
+from utils.index import create_ms_timestamp
 from utils.portal_layer_methods import build_new_hist_feature, get_layer_on_portal, create_new_feature, generate_portal_token
 from prefect.variables import Variable
 from prefect import flow, get_run_logger
 from prefect.blocks.system import Secret
 import pandas as pd
+import numpy as np
 
 secret_block = Secret.load("usuario-pmngeo-portal")
 user_portal = secret_block.get()
@@ -27,11 +29,11 @@ URL_HAZARD_ROAD_HIST_PORTAL = his_layers_url["URL_PERIGO_PISTA"]
 URL_HAZARD_OBJECT_HIST_PORTAL = his_layers_url["URL_OBJETO_PISTA"]
 
 
-@flow(name="Fluxo dados apenas na api")
+@flow(name="Fluxo dados apenas na api", description="Insere data de entrada, cria features georreferenciadas e adiciona a camada live")
 def sub_only_in_api(df_api,live_layer):
 
     logger = get_run_logger()        
-    logger.info('Insere data de entrada, cria features georreferenciadas e adiciona a camada live')
+    logger.info(f"{sub_only_in_api.description}")
     
     try:        
         create_ms_timestamp(df_api,'startTime')
@@ -53,28 +55,31 @@ def sub_only_in_api(df_api,live_layer):
         error_message = str(e)
         raise ValueError(f"Erro durante a execução only_in_api: {error_message}")
 
-@flow(name="Fluxo dados apenas na live")
+@flow(name="Fluxo dados apenas na live", description='Insere data de saída, trata dados para formato de histórico, filtra por contexto, insere as features na hist e excluí da live')
 def sub_only_in_layer(df_layer, live_layer):
     
     logger = get_run_logger()
-    logger.info('Insere data de saída, trata dados para formato de histórico, filtra por contexto, insere as features na hist e excluí da live')
+    logger.info(f"{sub_only_in_layer.description}")
     
     try:
-        create_ms_timestamp(df_layer, 'endTime')       
-        parsed_data = parse_hist_data(df_layer)
+        create_ms_timestamp(df_layer, 'endTime') 
+        create_ms_timestamp(df_layer,'dt_data_hora')
+        df_layer['dt_entrada'] = df_layer['dt_entrada'].replace({np.nan: None})
+        df_layer.drop(columns=['OBJECTID'], axis=1, inplace=True) 
+        
         token = generate_portal_token(CREDENTIALS_PORTAL)
 
         df_map = {
-            "acidentes": pd.DataFrame(parsed_data[parsed_data['tx_tipo_alerta'] == 'Acidente']),
-            "buracos": pd.DataFrame(parsed_data[parsed_data['tx_subtipo_alerta'] == 'Buraco']),
-            "semaforo": pd.DataFrame(parsed_data[parsed_data['tx_subtipo_alerta'] == 'Falha no semáforo']),
-            "carro_parado": pd.DataFrame(parsed_data[parsed_data['tx_subtipo_alerta'].isin(['Carro parado na pista','Carro parado no acostamento'])]),
-            "obras": pd.DataFrame(parsed_data[parsed_data['tx_subtipo_alerta'] == 'Obra na pista']),
-            "via_fechada": pd.DataFrame(parsed_data[parsed_data['tx_subtipo_alerta'] == 'Uma via fechada']),
-            "policia": pd.DataFrame(parsed_data[parsed_data['tx_tipo_alerta'] == 'Polícia']),
-            "alagamento": pd.DataFrame(parsed_data[parsed_data['tx_subtipo_alerta'] == 'Alagamento']),
-            "perigo_pista": pd.DataFrame(parsed_data[parsed_data['tx_subtipo_alerta'] == 'Perigo na pista']),
-            "objeto_pista": pd.DataFrame(parsed_data[parsed_data['tx_subtipo_alerta'] == 'Objeto na pista'])
+            "acidentes": pd.DataFrame(df_layer[df_layer['tx_tipo_alerta'] == 'Acidente']),
+            "buracos": pd.DataFrame(df_layer[df_layer['tx_subtipo_alerta'] == 'Buraco']),
+            "semaforo": pd.DataFrame(df_layer[df_layer['tx_subtipo_alerta'] == 'Falha no semáforo']),
+            "carro_parado": pd.DataFrame(df_layer[df_layer['tx_subtipo_alerta'].isin(['Carro parado na pista','Carro parado no acostamento'])]),
+            "obras": pd.DataFrame(df_layer[df_layer['tx_subtipo_alerta'] == 'Obra na pista']),
+            "via_fechada": pd.DataFrame(df_layer[df_layer['tx_subtipo_alerta'] == 'Uma via fechada']),
+            "policia": pd.DataFrame(df_layer[df_layer['tx_tipo_alerta'] == 'Polícia']),
+            "alagamento": pd.DataFrame(df_layer[df_layer['tx_subtipo_alerta'] == 'Alagamento']),
+            "perigo_pista": pd.DataFrame(df_layer[df_layer['tx_subtipo_alerta'] == 'Perigo na pista']),
+            "objeto_pista": pd.DataFrame(df_layer[df_layer['tx_subtipo_alerta'] == 'Objeto na pista'])
         }
 
         url_map = {
@@ -109,11 +114,11 @@ def sub_only_in_layer(df_layer, live_layer):
         error_message = str(e)
         raise ValueError(f"Erro durante a execução only_in_layer: {error_message}")
 
-@flow(name="Fluxo dados em ambos")
+@flow(name="Fluxo dados em ambos", description="Seleciona no df_live as features que estão na live e na api , cria features com valores novos, atualiza features na camada live")
 def sub_matching_att(df_live_layer,compared_data, matching_attributes, live_layer):
 
     logger = get_run_logger()        
-    logger.info('Seleciona no df_live as features que estão na live e na api , cria features com valores novos, atualiza features na camada live')
+    logger.info(f"{sub_matching_att.description}")
     
     try:
         live_matching = df_live_layer[df_live_layer['uuid'].isin(
